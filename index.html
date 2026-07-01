@@ -75,16 +75,25 @@
             word-break: keep-all;
         }
 
+        /* 로고 세로 묶음용 레이아웃 조정 */
         .logo-container {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             gap: 12px;
             margin-bottom: 25px;
         }
 
-        .logo-link {
+        .logo-item {
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .logo-link {
+            width: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -105,6 +114,15 @@
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
+        }
+
+        /* 로고 밑 텍스트 스타일 정의 */
+        .logo-caption {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-sub);
+            text-align: center;
+            word-break: keep-all;
         }
 
         h1 {
@@ -362,7 +380,7 @@
                 font-size: 13px;
             }
 
-            /* [수정 포인트] 아이폰 미니 등 좁은 화면에서 날짜와 콜타임 칸이 절대 겹치지 않도록 세로 정렬 분할 */
+            /* 아이폰 미니 등 좁은 화면에서 날짜와 콜타임 칸이 절대 겹치지 않도록 세로 정렬 분할 */
             .input-group.row {
                 display: flex;
                 flex-direction: column;
@@ -394,6 +412,9 @@
                 font-size: 18px;
                 padding: 0 2px;
             }
+            .logo-caption {
+                font-size: 10px;
+            }
         }
     </style>
 </head>
@@ -402,12 +423,21 @@
 <div class="scroll-wrapper" id="scrollWrapper">
     <div class="container" id="mainContent" style="display: none;">
         <div class="logo-container">
-            <a href="http://www.480prental.com" target="_blank" class="logo-link" title="480P 렌탈 바로가기">
-                <img src="480P_LOGO.jpg" alt="480P LOGO">
-            </a>
-            <a href="https://smartstore.naver.com/dekoboko" target="_blank" class="logo-link" title="DEKOBOKO 스마트스토어 바로가기">
-                <img src="DEKOBOKO_LOGO.jpg" alt="DEKOBOKO LOGO">
-            </a>
+            <!-- 480P 렌탈 로저 영역 -->
+            <div class="logo-item">
+                <a href="http://www.480prental.com" target="_blank" class="logo-link" title="480P 렌탈 바로가기">
+                    <img src="480P_LOGO.jpg" alt="480P LOGO">
+                </a>
+                <div class="logo-caption">촬영장비 예약하기</div>
+            </div>
+            
+            <!-- DEKOBOKO 스마트스토어 영역 -->
+            <div class="logo-item">
+                <a href="https://smartstore.naver.com/dekoboko" target="_blank" class="logo-link" title="DEKOBOKO 스마트스토어 바로가기">
+                    <img src="DEKOBOKO_LOGO.jpg" alt="DEKOBOKO LOGO">
+                </a>
+                <div class="logo-caption">데코보코 제품 보기</div>
+            </div>
         </div>
 
         <h1>촬영 장비 리스트</h1>
@@ -696,6 +726,23 @@
         listContainer.appendChild(itemRow);
         renumberItems();
     }
+
+    // scrollWrapper 타겟 오류를 방어하기 위한 추가 안전 메커니즘
+    document.addEventListener("DOMContentLoaded", function() {
+        const targetWrapper = document.getElementById('scrollWrapper');
+        if (targetWrapper) {
+            let sY = 0;
+            targetWrapper.addEventListener('touchstart', function(e) {
+                sY = e.touches[0].pageY;
+            }, { passive: true });
+            targetWrapper.addEventListener('touchmove', function(e) {
+                const y = e.touches[0].pageY;
+                if (targetWrapper.scrollTop === 0 && y > sY) {
+                    if (e.cancelable) e.preventDefault();
+                }
+            }, { passive: false });
+        }
+    });
 
     function updateAllDropdowns() {
         const dropdowns = document.querySelectorAll('.item-shop');
