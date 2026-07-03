@@ -288,11 +288,9 @@
             min-width: 0;
         }
 
-        /* 수량 입력 칸 디자인 조정 (셀렉트 박스 최적화) */
         .item-qty {
-            text-align: center;
-            text-align-last: center;
-            padding: 12px 4px;
+            text-align: right;
+            padding: 12px 6px 12px 8px;
         }
 
         .qty-unit {
@@ -425,7 +423,7 @@
 <div class="scroll-wrapper" id="scrollWrapper">
     <div class="container" id="mainContent" style="display: none;">
         <div class="logo-container">
-            <!-- 480P 렌탈 로고 영역 -->
+            <!-- 480P 렌탈 로저 영역 -->
             <div class="logo-item">
                 <a href="http://www.480prental.com" target="_blank" class="logo-link" title="480P 렌탈 바로가기">
                     <img src="480P_LOGO.jpg" alt="480P LOGO">
@@ -617,7 +615,6 @@
         alert('카톡 텍스트의 데이터가 성공적으로 복구되었습니다!');
     }
 
-    // 값 지정 품목 추가 (카톡 복구 시 1~99 드롭다운 값 자동 선택 지원)
     function addEquipmentItemWithValue(name, qty, shop) {
         itemCount++;
         const listContainer = document.getElementById('equipmentList');
@@ -629,22 +626,12 @@
         shopList.forEach(s => {
             selectOptions += `<option value="${s}" ${s === shop ? 'selected' : ''}>${s}</option>`;
         });
-
-        // 1부터 99까지의 수량 드롭다운 옵션 생성 및 복구된 값 매칭
-        let qtyOptions = '';
-        let parsedQty = parseInt(qty, 10) || 1;
-        if(parsedQty > 99) parsedQty = 99; // 99개 초과 예외 처리
-        for (let i = 1; i <= 99; i++) {
-            qtyOptions += `<option value="${i}" ${i === parsedQty ? 'selected' : ''}>${i}</option>`;
-        }
         
         itemRow.innerHTML = `
             <span class="item-number">${itemCount}.</span>
             <input type="text" class="item-name" placeholder="장비명" value="${name}">
             <div class="item-qty-wrapper">
-                <select class="item-qty">
-                    ${qtyOptions}
-                </select>
+                <input type="number" class="item-qty" placeholder="0" min="1" value="${qty}">
                 <span class="qty-unit">개</span>
             </div>
             <select class="item-shop">
@@ -711,7 +698,6 @@
         });
     }
 
-    // 기본 품목 추가 (1~99 드롭다운 생성 적용)
     function addEquipmentItem() {
         itemCount++;
         const listContainer = document.getElementById('equipmentList');
@@ -723,20 +709,12 @@
         shopList.forEach(shop => {
             selectOptions += `<option value="${shop}">${shop}</option>`;
         });
-
-        // 1부터 99까지의 수량 드롭다운 옵션 생성 (기본값 1)
-        let qtyOptions = '';
-        for (let i = 1; i <= 99; i++) {
-            qtyOptions += `<option value="${i}">${i}</option>`;
-        }
         
         itemRow.innerHTML = `
             <span class="item-number">${itemCount}.</span>
             <input type="text" class="item-name" placeholder="장비명">
             <div class="item-qty-wrapper">
-                <select class="item-qty">
-                    ${qtyOptions}
-                </select>
+                <input type="number" class="item-qty" placeholder="0" min="1">
                 <span class="qty-unit">개</span>
             </div>
             <select class="item-shop">
@@ -825,7 +803,7 @@
 
         rows.forEach((row) => {
             const name = row.querySelector('.item-name').value.trim();
-            const qty = row.querySelector('.item-qty').value; // select box 값 추출로 호환 완료
+            const qty = row.querySelector('.item-qty').value.trim();
             const shop = row.querySelector('.item-shop').value;
             const shopText = shop ? ` [${shop}]` : ''; 
             
