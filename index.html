@@ -11,7 +11,7 @@
 
     <style>
         :root {
-            —bg-color: #f8f9fa;
+            --bg-color: #f8f9fa;
             --card-bg: #ffffff;
             --text-main: #1a1a1a;
             --text-sub: #666666;
@@ -326,6 +326,8 @@
             align-items: center;
             gap: 6px;
             width: 100%;
+            position: relative;
+            overflow: visible;
         }
 
         .item-number {
@@ -336,9 +338,61 @@
             font-size: 14px;
         }
 
-        .item-name {
+        .item-name-wrap {
             flex: 2.2;
             min-width: 0;
+            position: relative;
+        }
+
+        .item-name {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .item-name-wrap.suggestions-open {
+            z-index: 50;
+        }
+
+        .equipment-suggestions {
+            display: none;
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            z-index: 60;
+            overflow: hidden;
+            border: 1px solid #d8dee4;
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.16);
+        }
+
+        .equipment-suggestions.active {
+            display: block;
+        }
+
+        .equipment-suggestion-item {
+            width: 100%;
+            min-height: 44px;
+            border: none;
+            border-bottom: 1px solid #f1f3f5;
+            background: #ffffff;
+            color: var(--text-main);
+            font-size: 14px;
+            font-weight: 700;
+            text-align: left;
+            padding: 10px 12px;
+            cursor: pointer;
+            font-family: inherit;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .equipment-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .equipment-suggestion-item:active {
+            background: #f1f3f5;
         }
 
         .item-qty-wrapper {
@@ -378,9 +432,30 @@
         .item-shop {
             flex: 1.7;
             min-width: 0;
+            min-height: 44px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
             background-color: #fafafa;
-            padding-right: 20px;
+            color: var(--text-main);
+            padding: 0 20px 0 10px;
             text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .item-shop.is-empty {
+            color: #777777;
+            font-weight: 600;
+        }
+
+        .item-shop:active {
+            background: #f1f3f5;
         }
 
         .btn-delete {
@@ -573,6 +648,147 @@
         }
 
         /* ---------------------------------------------------- */
+        /* 모바일 장비 구분 휠 선택 UI */
+        /* ---------------------------------------------------- */
+
+        .shop-picker-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.35);
+            z-index: 10000;
+            display: none;
+        }
+
+        .shop-picker-backdrop.active {
+            display: block;
+        }
+
+        .shop-picker-sheet {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 10001;
+            background: #ffffff;
+            border-radius: 20px 20px 0 0;
+            transform: translateY(100%);
+            transition: transform 0.22s ease;
+            padding-bottom: env(safe-area-inset-bottom);
+            box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.18);
+        }
+
+        .shop-picker-sheet.active {
+            transform: translateY(0);
+        }
+
+        .shop-picker-header {
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            border-bottom: 1px solid #eeeeee;
+        }
+
+        .shop-picker-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .shop-picker-btn {
+            border: none;
+            background: none;
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--accent-color);
+            padding: 10px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .shop-wheel-wrap {
+            position: relative;
+            height: 216px;
+            overflow: hidden;
+        }
+
+        .shop-wheel-center-line {
+            position: absolute;
+            left: 16px;
+            right: 16px;
+            top: 50%;
+            height: 44px;
+            transform: translateY(-50%);
+            border-top: 1px solid #dcdcdc;
+            border-bottom: 1px solid #dcdcdc;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .shop-wheel-fade-top,
+        .shop-wheel-fade-bottom {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 72px;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .shop-wheel-fade-top {
+            top: 0;
+            background: linear-gradient(
+                to bottom,
+                #ffffff 0%,
+                rgba(255,255,255,0) 100%
+            );
+        }
+
+        .shop-wheel-fade-bottom {
+            bottom: 0;
+            background: linear-gradient(
+                to top,
+                #ffffff 0%,
+                rgba(255,255,255,0) 100%
+            );
+        }
+
+        .shop-wheel {
+            height: 216px;
+            overflow-y: auto;
+            scroll-snap-type: y mandatory;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+            padding: 86px 0;
+        }
+
+        .shop-wheel-item {
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            scroll-snap-align: center;
+            color: #222222;
+            font-size: 20px;
+            font-weight: 800;
+            padding: 0 24px;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            user-select: none;
+        }
+
+        .shop-wheel-item.is-empty {
+            color: #777777;
+        }
+
+        body.shop-picker-open {
+            touch-action: none;
+        }
+
+        /* ---------------------------------------------------- */
         /* 대한민국 주소 검색 레이어 */
         /* ---------------------------------------------------- */
 
@@ -717,7 +933,7 @@
                 font-size: 13px;
             }
 
-            .item-name {
+            .item-name-wrap {
                 flex: 2;
             }
 
@@ -737,7 +953,7 @@
 
             .item-shop {
                 flex: 1.6;
-                padding: 10px 4px;
+                padding: 0 8px;
                 font-size: 12px;
             }
 
@@ -947,6 +1163,45 @@
 </div>
 
 <div 
+    class="shop-picker-backdrop" 
+    id="shopPickerBackdrop" 
+    onclick="closeShopPicker()"
+></div>
+
+<div 
+    class="shop-picker-sheet" 
+    id="shopPickerSheet" 
+    onclick="event.stopPropagation()"
+>
+    <div class="shop-picker-header">
+        <button 
+            type="button" 
+            class="shop-picker-btn" 
+            onclick="closeShopPicker()"
+        >
+            취소
+        </button>
+
+        <div class="shop-picker-title">장비 구분 선택</div>
+
+        <button 
+            type="button" 
+            class="shop-picker-btn" 
+            onclick="confirmShopPicker()"
+        >
+            완료
+        </button>
+    </div>
+
+    <div class="shop-wheel-wrap">
+        <div class="shop-wheel-fade-top"></div>
+        <div class="shop-wheel-center-line"></div>
+        <div class="shop-wheel" id="shopWheel"></div>
+        <div class="shop-wheel-fade-bottom"></div>
+    </div>
+</div>
+
+<div 
     class="address-search-backdrop" 
     id="addressSearchBackdrop" 
     onclick="closeAddressSearchLayer()"
@@ -1024,6 +1279,27 @@
     let itemCount = 0;
     let shopList = [];
 
+    const DEFAULT_EQUIPMENT_SUGGESTIONS = [
+        'BNC 숏 라인',
+        'BNC 롱 라인',
+        '2pin D-tap라인',
+        'mini XLR D-tap 라인',
+        '7pin lemo D-tap라인',
+        'NPF 더미 D-tap라인',
+        '9v D-tap 라인',
+        '매직암 대',
+        '매직암 중',
+        '매직암 소',
+        '매직암 나노',
+        '나노 클램프',
+        '슈퍼클램프',
+        '매슬리니',
+        'C스탠드',
+        'A스탠드',
+        '암',
+        '헤드'
+    ];
+
     let selectedAddressData = {
         finalAddress: '',
         roadAddress: '',
@@ -1035,12 +1311,16 @@
     let selectedMapUrl = '';
     let addressLayerScrollTop = 0;
     let locationInputEventsReady = false;
+    let equipmentAutocompleteEventsReady = false;
 
     const QTY_MIN = 1;
     const QTY_MAX = 99;
+    const WHEEL_ITEM_HEIGHT = 44;
 
     let currentQtyButton = null;
     let qtyWheelReady = false;
+    let currentShopButton = null;
+    let activeSuggestionBox = null;
 
     function escapeHtml(value) {
         return String(value || '').replace(/[&<>"']/g, function(match) {
@@ -1110,7 +1390,11 @@
     }
 
     function openQtyPicker(button) {
+        if (!button) return;
+
         initQtyWheel();
+        closeShopPicker();
+        closeEquipmentSuggestions();
 
         currentQtyButton = button;
 
@@ -1127,7 +1411,7 @@
 
         setTimeout(function() {
             const targetIndex = currentQty - QTY_MIN;
-            wheel.scrollTop = targetIndex * 44;
+            wheel.scrollTop = targetIndex * WHEEL_ITEM_HEIGHT;
         }, 30);
     }
 
@@ -1136,7 +1420,7 @@
 
         if (!wheel) return 1;
 
-        const index = Math.round(wheel.scrollTop / 44);
+        const index = Math.round(wheel.scrollTop / WHEEL_ITEM_HEIGHT);
         const selectedQty = QTY_MIN + index;
 
         return normalizeQty(selectedQty);
@@ -1154,6 +1438,8 @@
         currentQtyButton.textContent = selectedQty;
 
         closeQtyPicker();
+        closeShopPicker();
+        closeEquipmentSuggestions();
     }
 
     function closeQtyPicker() {
@@ -1166,6 +1452,258 @@
         document.body.classList.remove('qty-picker-open');
 
         currentQtyButton = null;
+    }
+
+    function getShopButtonLabel(shop) {
+        return shop ? shop : '장비 구분';
+    }
+
+    function setShopButtonValue(button, shop) {
+        if (!button) return;
+
+        const safeShop = String(shop || '').trim();
+
+        button.value = safeShop;
+        button.dataset.value = safeShop;
+        button.textContent = getShopButtonLabel(safeShop);
+        button.title = safeShop || '미선택';
+        button.classList.toggle('is-empty', !safeShop);
+    }
+
+    function createShopButton(shop) {
+        const safeShop = String(shop || '').trim();
+        const emptyClass = safeShop ? '' : ' is-empty';
+
+        return `
+            <button
+                type="button"
+                class="item-shop${emptyClass}"
+                value="${escapeHtml(safeShop)}"
+                data-value="${escapeHtml(safeShop)}"
+                title="${escapeHtml(safeShop || '미선택')}"
+                onclick="openShopPicker(this)"
+            >${escapeHtml(getShopButtonLabel(safeShop))}</button>
+        `;
+    }
+
+    function createEquipmentNameInput(name) {
+        return `
+            <div class="item-name-wrap">
+                <input
+                    type="text"
+                    class="item-name"
+                    placeholder="장비명"
+                    value="${escapeHtml(name || '')}"
+                    autocomplete="off"
+                >
+                <div class="equipment-suggestions"></div>
+            </div>
+        `;
+    }
+
+    function getShopWheelOptions() {
+        return [''].concat(shopList);
+    }
+
+    function renderShopWheel(selectedShop) {
+        const wheel = document.getElementById('shopWheel');
+
+        if (!wheel) return;
+
+        const options = getShopWheelOptions();
+        const selectedValue = String(selectedShop || '').trim();
+
+        wheel.innerHTML = '';
+
+        options.forEach(function(shop) {
+            const item = document.createElement('div');
+            const isEmpty = !shop;
+
+            item.className = 'shop-wheel-item' + (isEmpty ? ' is-empty' : '');
+            item.dataset.value = shop;
+            item.textContent = isEmpty ? '미선택' : shop;
+
+            wheel.appendChild(item);
+        });
+
+        setTimeout(function() {
+            const selectedIndex = Math.max(0, options.indexOf(selectedValue));
+
+            wheel.scrollTop = selectedIndex * WHEEL_ITEM_HEIGHT;
+        }, 30);
+    }
+
+    function openShopPicker(button) {
+        const backdrop = document.getElementById('shopPickerBackdrop');
+        const sheet = document.getElementById('shopPickerSheet');
+
+        if (!button || !backdrop || !sheet) return;
+
+        closeQtyPicker();
+        closeEquipmentSuggestions();
+
+        currentShopButton = button;
+
+        renderShopWheel(button.value || button.dataset.value || '');
+
+        backdrop.classList.add('active');
+        sheet.classList.add('active');
+        document.body.classList.add('shop-picker-open');
+    }
+
+    function getSelectedShopFromWheel() {
+        const wheel = document.getElementById('shopWheel');
+        const options = getShopWheelOptions();
+
+        if (!wheel || options.length === 0) return '';
+
+        const rawIndex = Math.round(wheel.scrollTop / WHEEL_ITEM_HEIGHT);
+        const index = Math.max(0, Math.min(rawIndex, options.length - 1));
+
+        return options[index] || '';
+    }
+
+    function confirmShopPicker() {
+        if (!currentShopButton) {
+            closeShopPicker();
+            return;
+        }
+
+        setShopButtonValue(currentShopButton, getSelectedShopFromWheel());
+        closeShopPicker();
+    }
+
+    function closeShopPicker() {
+        const backdrop = document.getElementById('shopPickerBackdrop');
+        const sheet = document.getElementById('shopPickerSheet');
+
+        if (backdrop) backdrop.classList.remove('active');
+        if (sheet) sheet.classList.remove('active');
+
+        document.body.classList.remove('shop-picker-open');
+
+        currentShopButton = null;
+    }
+
+    function updateShopButtonsAfterShopListChange() {
+        const buttons = document.querySelectorAll('.item-shop');
+
+        buttons.forEach(function(button) {
+            const currentValue = String(button.value || '').trim();
+
+            if (currentValue && !shopList.includes(currentValue)) {
+                setShopButtonValue(button, '');
+            }
+        });
+
+        if (currentShopButton) {
+            renderShopWheel(currentShopButton.value || '');
+        }
+    }
+
+    function normalizeSuggestionValue(value) {
+        return String(value || '').trim().toLowerCase();
+    }
+
+    function getEquipmentSuggestionMatches(query) {
+        const normalizedQuery = normalizeSuggestionValue(query);
+
+        if (!normalizedQuery) return [];
+
+        return DEFAULT_EQUIPMENT_SUGGESTIONS
+            .filter(function(item) {
+                return normalizeSuggestionValue(item).includes(normalizedQuery);
+            })
+            .slice(0, 8);
+    }
+
+    function closeEquipmentSuggestions() {
+        const boxes = document.querySelectorAll('.equipment-suggestions.active');
+
+        boxes.forEach(function(box) {
+            box.classList.remove('active');
+            box.innerHTML = '';
+
+            if (box.parentElement) {
+                box.parentElement.classList.remove('suggestions-open');
+            }
+        });
+
+        activeSuggestionBox = null;
+    }
+
+    function renderEquipmentSuggestions(input) {
+        if (!input) return;
+
+        const wrapperElement = input.closest('.item-name-wrap');
+        const suggestionBox = wrapperElement
+            ? wrapperElement.querySelector('.equipment-suggestions')
+            : null;
+
+        if (!wrapperElement || !suggestionBox) return;
+
+        closeEquipmentSuggestions();
+
+        const matches = getEquipmentSuggestionMatches(input.value);
+        suggestionBox.innerHTML = '';
+
+        if (matches.length === 0) {
+            suggestionBox.classList.remove('active');
+            wrapperElement.classList.remove('suggestions-open');
+            activeSuggestionBox = null;
+            return;
+        }
+
+        matches.forEach(function(item) {
+            const button = document.createElement('button');
+
+            button.type = 'button';
+            button.className = 'equipment-suggestion-item';
+            button.textContent = item;
+
+            button.addEventListener('pointerdown', function(event) {
+                event.preventDefault();
+                input.value = item;
+                closeEquipmentSuggestions();
+                input.focus();
+            });
+
+            suggestionBox.appendChild(button);
+        });
+
+        suggestionBox.classList.add('active');
+        wrapperElement.classList.add('suggestions-open');
+        activeSuggestionBox = suggestionBox;
+    }
+
+    function initEquipmentAutocomplete(input) {
+        if (!input || input.dataset.autocompleteReady === 'true') return;
+
+        input.addEventListener('input', function() {
+            renderEquipmentSuggestions(input);
+        });
+
+        input.addEventListener('focus', function() {
+            renderEquipmentSuggestions(input);
+        });
+
+        input.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeEquipmentSuggestions();
+            }
+        });
+
+        input.dataset.autocompleteReady = 'true';
+
+        if (!equipmentAutocompleteEventsReady) {
+            document.addEventListener('pointerdown', function(event) {
+                if (event.target.closest('.item-name-wrap')) return;
+
+                closeEquipmentSuggestions();
+            });
+
+            equipmentAutocompleteEventsReady = true;
+        }
     }
 
     function getInputValue(id) {
@@ -1196,13 +1734,17 @@
         return plainUrl ? plainUrl[0].trim() : '';
     }
 
-    function buildKakaoMapSearchUrl(address) {
-        const baseAddress = String(address || '').trim();
+    function buildKakaoMapUrl(address) {
+        const cleanAddress = String(address || '').trim();
 
-        if (!baseAddress) return '';
+        if (!cleanAddress) return '';
 
         return 'https://map.kakao.com/link/search/' +
-            encodeURIComponent(baseAddress);
+            encodeURIComponent(cleanAddress);
+    }
+
+    function buildKakaoMapSearchUrl(address) {
+        return buildKakaoMapUrl(address);
     }
 
     function setHiddenInputValue(id, value) {
@@ -1341,7 +1883,7 @@
             }
         }
 
-        const mapUrl = buildKakaoMapSearchUrl(finalAddress);
+        const mapUrl = buildKakaoMapUrl(finalAddress);
 
         locationInput.value = finalAddress;
 
@@ -1374,6 +1916,8 @@
         }
 
         closeQtyPicker();
+        closeShopPicker();
+        closeEquipmentSuggestions();
 
         if (wrapper) {
             addressLayerScrollTop = wrapper.scrollTop;
@@ -1477,8 +2021,8 @@
         const mapUrl = isSelectedAddress
             ? selectedAddressData.mapUrl ||
                 selectedMapUrl ||
-                buildKakaoMapSearchUrl(baseAddress)
-            : buildKakaoMapSearchUrl(baseAddress);
+                buildKakaoMapUrl(baseAddress)
+            : buildKakaoMapUrl(baseAddress);
 
         return {
             locationText: locationText,
@@ -1510,7 +2054,7 @@
             roadAddress: '',
             jibunAddress: '',
             zonecode: '',
-            mapUrl: restoredMapUrl || buildKakaoMapSearchUrl(restoredAddress)
+            mapUrl: restoredMapUrl || buildKakaoMapUrl(restoredAddress)
         });
     }
 
@@ -1538,6 +2082,7 @@
         let recoveredLocationText = '';
         let recoveredMapUrl = '';
         let hasRecoveredLocation = false;
+        let isMapLinkSection = false;
 
         lines.forEach(function(line) {
             const trimmed = line.trim();
@@ -1564,9 +2109,20 @@
             else if (trimmed.startsWith('🗺 카카오맵:')) {
                 recoveredMapUrl =
                     trimmed.replace('🗺 카카오맵:', '').trim();
+                isMapLinkSection = false;
+                isMemoSection = false;
+            }
+            else if (trimmed.includes('🗺 카카오맵 링크')) {
+                isMapLinkSection = true;
+                isMemoSection = false;
+            }
+            else if (isMapLinkSection && /^https?:\/\//.test(trimmed)) {
+                recoveredMapUrl = trimmed;
+                isMapLinkSection = false;
             }
             else if (trimmed.startsWith('📝 메모/특이사항:')) {
                 isMemoSection = true;
+                isMapLinkSection = false;
             }
             else if (!isMemoSection && /^\d+\./.test(trimmed)) {
                 const content = trimmed.replace(/^\d+\.\s*/, '');
@@ -1604,7 +2160,7 @@
                 });
             }
             else if (isMemoSection) {
-                if (!trimmed.startsWith('—')) {
+                if (!/^-{3,}$/.test(trimmed)) {
                     memoLines.push(line);
                 }
             }
@@ -1633,12 +2189,20 @@
             });
         }
 
-        document.getElementById('memoInput').value =
-            memoLines.join('\n').trim();
+        const memoInput = document.getElementById('memoInput');
+        const importSection = document.querySelector('.import-section');
 
-        document.getElementById('importTextArea').value = '';
+        if (memoInput) {
+            memoInput.value = memoLines.join('\n').trim();
+        }
 
-        document.querySelector('.import-section').removeAttribute('open');
+        if (importTextArea) {
+            importTextArea.value = '';
+        }
+
+        if (importSection) {
+            importSection.removeAttribute('open');
+        }
 
         alert('카톡 텍스트의 데이터가 성공적으로 복구되었습니다!');
     }
@@ -1652,35 +2216,16 @@
         itemRow.className = 'equipment-item';
         itemRow.id = `itemRow_${itemCount}`;
 
-        let selectOptions = `<option value="">장비 구분</option>`;
-
-        shopList.forEach(function(s) {
-            const selected = s === shop ? 'selected' : '';
-
-            selectOptions += `
-                <option value="${escapeHtml(s)}" ${selected}>
-                    ${escapeHtml(s)}
-                </option>
-            `;
-        });
-
         itemRow.innerHTML = `
             <span class="item-number">${itemCount}.</span>
 
-            <input 
-                type="text" 
-                class="item-name" 
-                placeholder="장비명" 
-                value="${escapeHtml(name)}"
-            >
+            ${createEquipmentNameInput(name)}
 
             <div class="item-qty-wrapper">
                 ${createQtyButton(qty)}
             </div>
 
-            <select class="item-shop">
-                ${selectOptions}
-            </select>
+            ${createShopButton(shop)}
 
             <button class="btn-delete" onclick="removeItem(${itemCount})">
                 ×
@@ -1688,6 +2233,7 @@
         `;
 
         listContainer.appendChild(itemRow);
+        initEquipmentAutocomplete(itemRow.querySelector('.item-name'));
         renumberItems();
     }
 
@@ -1710,9 +2256,10 @@
 
     function registerShop() {
         const shopInput = document.getElementById('shopInput');
-        const shopName = shopInput.value.trim();
 
         if (!shopInput) return;
+
+        const shopName = shopInput.value.trim();
 
         if (!shopName) {
             alert('구분할 이름을 입력해 주세요.');
@@ -1728,7 +2275,7 @@
         shopInput.value = '';
 
         renderShopTags();
-        updateAllDropdowns();
+        updateShopButtonsAfterShopListChange();
     }
 
     function removeShop(name) {
@@ -1737,11 +2284,13 @@
         });
 
         renderShopTags();
-        updateAllDropdowns();
+        updateShopButtonsAfterShopListChange();
     }
 
     function renderShopTags() {
         const container = document.getElementById('shopTags');
+
+        if (!container) return;
 
         container.innerHTML = '';
 
@@ -1774,32 +2323,16 @@
         itemRow.className = 'equipment-item';
         itemRow.id = `itemRow_${itemCount}`;
 
-        let selectOptions = `<option value="">장비 구분</option>`;
-
-        shopList.forEach(function(shop) {
-            selectOptions += `
-                <option value="${escapeHtml(shop)}">
-                    ${escapeHtml(shop)}
-                </option>
-            `;
-        });
-
         itemRow.innerHTML = `
             <span class="item-number">${itemCount}.</span>
 
-            <input 
-                type="text" 
-                class="item-name" 
-                placeholder="장비명"
-            >
+            ${createEquipmentNameInput('')}
 
             <div class="item-qty-wrapper">
                 ${createQtyButton(1)}
             </div>
 
-            <select class="item-shop">
-                ${selectOptions}
-            </select>
+            ${createShopButton('')}
 
             <button class="btn-delete" onclick="removeItem(${itemCount})">
                 ×
@@ -1807,6 +2340,7 @@
         `;
 
         listContainer.appendChild(itemRow);
+        initEquipmentAutocomplete(itemRow.querySelector('.item-name'));
         renumberItems();
     }
 
@@ -1831,34 +2365,14 @@
     });
 
     function updateAllDropdowns() {
-        const dropdowns = document.querySelectorAll('.item-shop');
-
-        dropdowns.forEach(function(dropdown) {
-            const currentValue = dropdown.value;
-
-            dropdown.innerHTML = `<option value="">장비 구분</option>`;
-
-            shopList.forEach(function(shop) {
-                const option = document.createElement('option');
-
-                option.value = shop;
-                option.text = shop;
-
-                dropdown.appendChild(option);
-            });
-
-            if (shopList.includes(currentValue)) {
-                dropdown.value = currentValue;
-            } else {
-                dropdown.value = "";
-            }
-        });
+        updateShopButtonsAfterShopListChange();
     }
 
     function removeItem(id) {
         const row = document.getElementById(`itemRow_${id}`);
 
         if (row) {
+            closeEquipmentSuggestions();
             row.remove();
             renumberItems();
         }
@@ -1873,31 +2387,26 @@
             itemCount = index + 1;
 
             row.id = `itemRow_${itemCount}`;
-            row.querySelector('.item-number').innerText = `${itemCount}.`;
+            const numberElement = row.querySelector('.item-number');
+            const deleteButton = row.querySelector('.btn-delete');
 
-            row
-                .querySelector('.btn-delete')
-                .setAttribute('onclick', `removeItem(${itemCount})`);
+            if (numberElement) {
+                numberElement.innerText = `${itemCount}.`;
+            }
+
+            if (deleteButton) {
+                deleteButton.setAttribute('onclick', `removeItem(${itemCount})`);
+            }
         });
     }
 
     function shareToKakao() {
-        const projectName =
-            document.getElementById('projectName').value ||
-            '미지정 프로젝트';
-
-        const shootDate =
-            document.getElementById('shootDate').value ||
-            '-';
-
-        const callTime =
-            document.getElementById('callTime').value ||
-            '-';
+        const projectName = getInputValue('projectName') || '미지정 프로젝트';
+        const shootDate = getInputValue('shootDate') || '-';
+        const callTime = getInputValue('callTime') || '-';
 
         const locationShareData = getShareLocationData();
-
-        const memo =
-            document.getElementById('memoInput').value.trim();
+        const memo = getInputValue('memoInput');
 
         let textOutput = `🎬 [촬영장비 리스트]\n`;
 
@@ -1905,15 +2414,15 @@
         textOutput += `📅 촬영 날짜: ${shootDate}\n`;
         textOutput += `⏰ 콜타임: ${callTime}\n`;
         textOutput += `📍 촬영 장소: ${locationShareData.locationText}\n`;
-        textOutput += `🗺 카카오맵: ${locationShareData.mapUrl}\n`;
-        textOutput += `-------------------------\n`;
-        textOutput += `📦 장비 목록:\n`;
+        textOutput += `-------------------------\n\n`;
+        textOutput += `📦 장비 목록:\n\n`;
 
         const rows = document.querySelectorAll('.equipment-item');
         let validItemCount = 0;
 
         rows.forEach(function(row) {
-            const name = row.querySelector('.item-name').value.trim();
+            const nameInput = row.querySelector('.item-name');
+            const name = nameInput ? nameInput.value.trim() : '';
 
             const qtyButton = row.querySelector('.item-qty');
 
@@ -1921,7 +2430,10 @@
                 ? String(qtyButton.value || qtyButton.textContent || '1').trim()
                 : '1';
 
-            const shop = row.querySelector('.item-shop').value;
+            const shopButton = row.querySelector('.item-shop');
+            const shop = shopButton
+                ? String(shopButton.value || '').trim()
+                : '';
             const shopText = shop ? ` [${shop}]` : '';
 
             if (name) {
@@ -1936,9 +2448,16 @@
         }
 
         if (memo) {
-            textOutput += `-------------------------\n`;
+            textOutput += `\n---\n\n`;
             textOutput += `📝 메모/특이사항:\n`;
             textOutput += `${memo}\n`;
+        }
+
+        textOutput += `\n---\n\n`;
+        textOutput += `🗺 카카오맵 링크\n`;
+
+        if (locationShareData.mapUrl && locationShareData.mapUrl !== '-') {
+            textOutput += `${locationShareData.mapUrl}\n`;
         }
 
         if (navigator.share) {
