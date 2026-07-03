@@ -11,7 +11,7 @@
 
     <style>
         :root {
-            --bg-color: #f8f9fa;
+            —bg-color: #f8f9fa;
             --card-bg: #ffffff;
             --text-main: #1a1a1a;
             --text-sub: #666666;
@@ -201,6 +201,65 @@
         textarea {
             resize: vertical;
             min-height: 80px;
+        }
+
+        .location-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .location-search-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 96px;
+            gap: 8px;
+        }
+
+        #locationInput,
+        #locationDetailInput {
+            min-height: 48px;
+            font-size: 15px;
+        }
+
+        .btn-address-search {
+            border: none;
+            border-radius: 8px;
+            background: var(--text-main);
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            font-family: inherit;
+            min-height: 48px;
+            padding: 0 12px;
+            white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-address-search:active {
+            background: #333333;
+        }
+
+        .address-result-info {
+            display: none;
+            border: 1px solid #e9ecef;
+            background: #f8f9fa;
+            color: var(--text-sub);
+            border-radius: 8px;
+            padding: 9px 10px;
+            font-size: 12px;
+            line-height: 1.45;
+            word-break: keep-all;
+        }
+
+        .address-result-info.active {
+            display: block;
+        }
+
+        .address-result-info.has-address {
+            border-color: #bfd7ff;
+            background: #f3f8ff;
+            color: #245180;
         }
 
         .shop-registration {
@@ -513,6 +572,96 @@
             touch-action: none;
         }
 
+        /* ---------------------------------------------------- */
+        /* 대한민국 주소 검색 레이어 */
+        /* ---------------------------------------------------- */
+
+        .address-search-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.42);
+            z-index: 10020;
+            display: none;
+        }
+
+        .address-search-backdrop.active {
+            display: block;
+        }
+
+        .address-search-sheet {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 10021;
+            height: min(82vh, 640px);
+            max-height: calc(100vh - 24px);
+            background: #ffffff;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -10px 34px rgba(0, 0, 0, 0.2);
+            transform: translateY(105%);
+            transition: transform 0.24s ease;
+            padding-bottom: env(safe-area-inset-bottom);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .address-search-sheet.active {
+            transform: translateY(0);
+        }
+
+        .address-search-header {
+            min-height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            border-bottom: 1px solid #eeeeee;
+            flex-shrink: 0;
+        }
+
+        .address-search-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .address-search-close {
+            border: none;
+            background: none;
+            color: var(--accent-color);
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            padding: 10px;
+            font-family: inherit;
+        }
+
+        .address-search-body {
+            flex: 1;
+            min-height: 0;
+            padding: 10px;
+            background: #f8f9fa;
+        }
+
+        #postcodeEmbed {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            background: #ffffff;
+        }
+
+        body.address-layer-open {
+            touch-action: none;
+        }
+
+        body.address-layer-open .scroll-wrapper {
+            overflow: hidden;
+        }
+
         @media screen and (max-width: 400px) {
             .scroll-wrapper {
                 padding: 10px;
@@ -530,6 +679,22 @@
             input, select, textarea {
                 padding: 10px 8px;
                 font-size: 13px;
+            }
+
+            .location-search-row {
+                grid-template-columns: minmax(0, 1fr) 86px;
+                gap: 6px;
+            }
+
+            #locationInput,
+            #locationDetailInput,
+            .btn-address-search {
+                min-height: 46px;
+                font-size: 13px;
+            }
+
+            .btn-address-search {
+                padding: 0 8px;
             }
 
             .btn-register {
@@ -621,7 +786,7 @@
         <h1>촬영 장비 리스트</h1>
 
         <details class="import-section">
-            <summary>📝 카톡 공유 텍스트로 목록 복구하기(장비리스트 초기화시 복구)</summary>
+            <summary>📝 카톡 공유 텍스트로 목록 복구하기</summary>
 
             <div class="import-container">
                 <textarea 
@@ -654,12 +819,43 @@
                 >
             </div>
 
-            <div class="input-group">
-                <input 
-                    type="text" 
-                    id="locationInput" 
-                    placeholder="로케 주소 입력"
+            <div class="input-group location-group">
+                <div class="location-search-row">
+                    <input 
+                        type="text" 
+                        id="locationInput" 
+                        placeholder="주소 직접 입력 또는 검색"
+                        autocomplete="street-address"
+                    >
+
+                    <button 
+                        type="button" 
+                        class="btn-address-search" 
+                        onclick="openAddressSearchLayer()"
+                    >
+                        주소 검색
+                    </button>
+                </div>
+
+                <input
+                    type="text"
+                    id="locationDetailInput"
+                    placeholder="상세주소 입력 (층, 호수, 집합 장소 등)"
+                    autocomplete="address-line2"
                 >
+
+                <div 
+                    class="address-result-info active" 
+                    id="addressResultInfo"
+                >
+                    주소 검색 버튼을 누르면 대한민국 주소를 검색할 수 있습니다.
+                </div>
+
+                <input type="hidden" id="selectedFinalAddress">
+                <input type="hidden" id="selectedRoadAddress">
+                <input type="hidden" id="selectedJibunAddress">
+                <input type="hidden" id="selectedZonecode">
+                <input type="hidden" id="selectedMapUrl">
             </div>
 
             <div class="shop-registration">
@@ -750,6 +946,37 @@
     </div>
 </div>
 
+<div 
+    class="address-search-backdrop" 
+    id="addressSearchBackdrop" 
+    onclick="closeAddressSearchLayer()"
+></div>
+
+<div 
+    class="address-search-sheet" 
+    id="addressSearchSheet" 
+    onclick="event.stopPropagation()"
+>
+    <div class="address-search-header">
+        <div class="address-search-title">주소 검색</div>
+
+        <button 
+            type="button" 
+            class="address-search-close" 
+            onclick="closeAddressSearchLayer()"
+        >
+            닫기
+        </button>
+    </div>
+
+    <div class="address-search-body">
+        <div id="postcodeEmbed"></div>
+    </div>
+</div>
+
+<!-- Daum/Kakao 우편번호 주소 검색을 정적 HTML에서 레이어 방식으로 사용합니다. -->
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+
 <script>
     (function checkNfcAuthority() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -796,6 +1023,18 @@
 
     let itemCount = 0;
     let shopList = [];
+
+    let selectedAddressData = {
+        finalAddress: '',
+        roadAddress: '',
+        jibunAddress: '',
+        zonecode: '',
+        mapUrl: ''
+    };
+
+    let selectedMapUrl = '';
+    let addressLayerScrollTop = 0;
+    let locationInputEventsReady = false;
 
     const QTY_MIN = 1;
     const QTY_MAX = 99;
@@ -929,8 +1168,355 @@
         currentQtyButton = null;
     }
 
+    function getInputValue(id) {
+        const element = document.getElementById(id);
+
+        return element ? element.value.trim() : '';
+    }
+
+    function normalizeSharedValue(value) {
+        const cleaned = String(value || '').trim();
+
+        return cleaned === '-' ? '' : cleaned;
+    }
+
+    function extractMapUrlFromSharedLine(value) {
+        const rawValue = normalizeSharedValue(value);
+
+        if (!rawValue) return '';
+
+        const markdownUrl = rawValue.match(/\((https?:\/\/[^)]+)\)/);
+
+        if (markdownUrl) {
+            return markdownUrl[1].trim();
+        }
+
+        const plainUrl = rawValue.match(/https?:\/\/[^\s\]]+/);
+
+        return plainUrl ? plainUrl[0].trim() : '';
+    }
+
+    function buildKakaoMapSearchUrl(address) {
+        const baseAddress = String(address || '').trim();
+
+        if (!baseAddress) return '';
+
+        return 'https://map.kakao.com/link/search/' +
+            encodeURIComponent(baseAddress);
+    }
+
+    function setHiddenInputValue(id, value) {
+        const input = document.getElementById(id);
+
+        if (input) {
+            input.value = value || '';
+        }
+    }
+
+    // 선택된 주소 데이터를 hidden input과 JS 변수에 동시에 저장합니다.
+    function syncSelectedAddressHiddenInputs() {
+        selectedMapUrl = selectedAddressData.mapUrl || '';
+
+        setHiddenInputValue(
+            'selectedFinalAddress',
+            selectedAddressData.finalAddress
+        );
+        setHiddenInputValue(
+            'selectedRoadAddress',
+            selectedAddressData.roadAddress
+        );
+        setHiddenInputValue(
+            'selectedJibunAddress',
+            selectedAddressData.jibunAddress
+        );
+        setHiddenInputValue(
+            'selectedZonecode',
+            selectedAddressData.zonecode
+        );
+        setHiddenInputValue(
+            'selectedMapUrl',
+            selectedAddressData.mapUrl
+        );
+    }
+
+    function updateAddressResultInfo(message) {
+        const info = document.getElementById('addressResultInfo');
+
+        if (!info) return;
+
+        info.classList.add('active');
+
+        if (message) {
+            info.textContent = message;
+            info.classList.remove('has-address');
+            return;
+        }
+
+        if (selectedAddressData.finalAddress) {
+            const zipText = selectedAddressData.zonecode
+                ? ` / 우편번호 ${selectedAddressData.zonecode}`
+                : '';
+
+            info.textContent =
+                `선택됨: ${selectedAddressData.finalAddress}${zipText}`;
+            info.classList.add('has-address');
+            return;
+        }
+
+        if (getInputValue('locationInput')) {
+            info.textContent =
+                '직접 입력한 주소는 공유할 때 카카오맵 검색 링크가 자동 생성됩니다.';
+            info.classList.remove('has-address');
+            return;
+        }
+
+        info.textContent =
+            '주소 검색 버튼을 누르면 대한민국 주소를 검색할 수 있습니다.';
+        info.classList.remove('has-address');
+    }
+
+    function setSelectedAddressData(data) {
+        selectedAddressData = {
+            finalAddress: data.finalAddress || '',
+            roadAddress: data.roadAddress || '',
+            jibunAddress: data.jibunAddress || '',
+            zonecode: data.zonecode || '',
+            mapUrl: data.mapUrl || ''
+        };
+
+        syncSelectedAddressHiddenInputs();
+        updateAddressResultInfo();
+    }
+
+    function clearSelectedAddressData(keepInputValue) {
+        if (!keepInputValue) {
+            const locationInput = document.getElementById('locationInput');
+            const detailInput = document.getElementById('locationDetailInput');
+
+            if (locationInput) locationInput.value = '';
+            if (detailInput) detailInput.value = '';
+        }
+
+        setSelectedAddressData({
+            finalAddress: '',
+            roadAddress: '',
+            jibunAddress: '',
+            zonecode: '',
+            mapUrl: ''
+        });
+    }
+
+    // Daum Postcode 선택 결과를 앱의 주소 입력값과 저장 데이터로 반영합니다.
+    function handleAddressSearchComplete(data) {
+        const locationInput = document.getElementById('locationInput');
+        const detailInput = document.getElementById('locationDetailInput');
+
+        if (!data || !locationInput) {
+            closeAddressSearchLayer();
+            return;
+        }
+
+        const roadAddress = data.roadAddress || data.autoRoadAddress || '';
+        const jibunAddress = data.jibunAddress || data.autoJibunAddress || '';
+        let finalAddress =
+            data.userSelectedType === 'J' ? jibunAddress : roadAddress;
+
+        if (!finalAddress) {
+            finalAddress = data.address || roadAddress || jibunAddress || '';
+        }
+
+        if (data.userSelectedType === 'R' && finalAddress === roadAddress) {
+            const extraParts = [];
+
+            if (data.bname && /(동|로|가)$/.test(data.bname)) {
+                extraParts.push(data.bname);
+            }
+
+            if (data.buildingName) {
+                extraParts.push(data.buildingName);
+            }
+
+            if (extraParts.length > 0) {
+                finalAddress += ` (${extraParts.join(', ')})`;
+            }
+        }
+
+        const mapUrl = buildKakaoMapSearchUrl(finalAddress);
+
+        locationInput.value = finalAddress;
+
+        setSelectedAddressData({
+            finalAddress: finalAddress,
+            roadAddress: roadAddress,
+            jibunAddress: jibunAddress,
+            zonecode: data.zonecode || '',
+            mapUrl: mapUrl
+        });
+
+        closeAddressSearchLayer();
+
+        if (detailInput) {
+            detailInput.focus();
+        }
+    }
+
+    // Daum Postcode 검색 결과를 모바일 바텀시트 안에 렌더링합니다.
+    function openAddressSearchLayer() {
+        const backdrop = document.getElementById('addressSearchBackdrop');
+        const sheet = document.getElementById('addressSearchSheet');
+        const embedTarget = document.getElementById('postcodeEmbed');
+
+        if (!backdrop || !sheet || !embedTarget) return;
+
+        if (!window.daum || !window.daum.Postcode) {
+            alert('주소 검색 스크립트를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.');
+            return;
+        }
+
+        closeQtyPicker();
+
+        if (wrapper) {
+            addressLayerScrollTop = wrapper.scrollTop;
+        }
+
+        embedTarget.innerHTML = '';
+        backdrop.classList.add('active');
+        sheet.classList.add('active');
+        document.body.classList.add('address-layer-open');
+
+        const postcode = new daum.Postcode({
+            width: '100%',
+            height: '100%',
+            oncomplete: handleAddressSearchComplete
+        });
+
+        const searchKeyword = getInputValue('locationInput');
+
+        if (searchKeyword) {
+            postcode.embed(embedTarget, { q: searchKeyword });
+        } else {
+            postcode.embed(embedTarget);
+        }
+    }
+
+    function closeAddressSearchLayer() {
+        const backdrop = document.getElementById('addressSearchBackdrop');
+        const sheet = document.getElementById('addressSearchSheet');
+        const embedTarget = document.getElementById('postcodeEmbed');
+
+        if (backdrop) backdrop.classList.remove('active');
+        if (sheet) sheet.classList.remove('active');
+        if (embedTarget) embedTarget.innerHTML = '';
+
+        document.body.classList.remove('address-layer-open');
+
+        if (wrapper) {
+            wrapper.scrollTop = addressLayerScrollTop;
+        }
+    }
+
+    function initLocationInputEvents() {
+        if (locationInputEventsReady) return;
+
+        const locationInput = document.getElementById('locationInput');
+
+        if (!locationInput) return;
+
+        locationInput.addEventListener('input', function() {
+            const typedAddress = locationInput.value.trim();
+
+            if (!typedAddress) {
+                clearSelectedAddressData(true);
+                return;
+            }
+
+            if (
+                selectedAddressData.finalAddress &&
+                typedAddress !== selectedAddressData.finalAddress
+            ) {
+                clearSelectedAddressData(true);
+                return;
+            }
+
+            updateAddressResultInfo();
+        });
+
+        locationInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                openAddressSearchLayer();
+            }
+        });
+
+        locationInputEventsReady = true;
+    }
+
+    // 카톡 공유에 사용할 장소 텍스트와 카카오맵 URL을 만듭니다.
+    function getShareLocationData() {
+        const typedAddress = getInputValue('locationInput');
+        const detailAddress = getInputValue('locationDetailInput');
+        const isSelectedAddress =
+            Boolean(selectedAddressData.finalAddress) &&
+            typedAddress === selectedAddressData.finalAddress;
+
+        const baseAddress = isSelectedAddress
+            ? selectedAddressData.finalAddress
+            : typedAddress;
+
+        if (!baseAddress) {
+            return {
+                locationText: '-',
+                mapUrl: '-'
+            };
+        }
+
+        const locationText = detailAddress
+            ? `${baseAddress} ${detailAddress}`
+            : baseAddress;
+
+        const mapUrl = isSelectedAddress
+            ? selectedAddressData.mapUrl ||
+                selectedMapUrl ||
+                buildKakaoMapSearchUrl(baseAddress)
+            : buildKakaoMapSearchUrl(baseAddress);
+
+        return {
+            locationText: locationText,
+            mapUrl: mapUrl || '-'
+        };
+    }
+
+    function restoreImportedAddressData(addressText, mapUrlText) {
+        const locationInput = document.getElementById('locationInput');
+        const detailInput = document.getElementById('locationDetailInput');
+        const restoredAddress = normalizeSharedValue(addressText);
+        const restoredMapUrl = extractMapUrlFromSharedLine(mapUrlText);
+
+        if (locationInput) {
+            locationInput.value = restoredAddress;
+        }
+
+        if (detailInput) {
+            detailInput.value = '';
+        }
+
+        if (!restoredAddress) {
+            clearSelectedAddressData(true);
+            return;
+        }
+
+        setSelectedAddressData({
+            finalAddress: restoredAddress,
+            roadAddress: '',
+            jibunAddress: '',
+            zonecode: '',
+            mapUrl: restoredMapUrl || buildKakaoMapSearchUrl(restoredAddress)
+        });
+    }
+
     function importFromText() {
-        const rawText = document.getElementById('importTextArea').value.trim();
+        const importTextArea = document.getElementById('importTextArea');
+        const rawText = importTextArea ? importTextArea.value.trim() : '';
 
         if (!rawText) {
             alert('복사한 카톡 텍스트를 입력창에 넣어주세요.');
@@ -938,14 +1524,20 @@
         }
 
         const lines = rawText.split('\n');
+        const equipmentList = document.getElementById('equipmentList');
 
-        document.getElementById('equipmentList').innerHTML = '';
+        if (equipmentList) {
+            equipmentList.innerHTML = '';
+        }
 
         shopList = [];
 
         let memoLines = [];
         let isMemoSection = false;
         let equipmentData = [];
+        let recoveredLocationText = '';
+        let recoveredMapUrl = '';
+        let hasRecoveredLocation = false;
 
         lines.forEach(function(line) {
             const trimmed = line.trim();
@@ -965,8 +1557,13 @@
                     trimmed.replace('⏰ 콜타임:', '').trim();
             } 
             else if (trimmed.startsWith('📍 촬영 장소:')) {
-                document.getElementById('locationInput').value =
+                recoveredLocationText =
                     trimmed.replace('📍 촬영 장소:', '').trim();
+                hasRecoveredLocation = true;
+            }
+            else if (trimmed.startsWith('🗺 카카오맵:')) {
+                recoveredMapUrl =
+                    trimmed.replace('🗺 카카오맵:', '').trim();
             }
             else if (trimmed.startsWith('📝 메모/특이사항:')) {
                 isMemoSection = true;
@@ -1007,11 +1604,18 @@
                 });
             }
             else if (isMemoSection) {
-                if (!trimmed.startsWith('---')) {
+                if (!trimmed.startsWith('—')) {
                     memoLines.push(line);
                 }
             }
         });
+
+        if (hasRecoveredLocation || recoveredMapUrl) {
+            restoreImportedAddressData(
+                recoveredLocationText,
+                recoveredMapUrl
+            );
+        }
 
         renderShopTags();
 
@@ -1091,6 +1695,9 @@
         if (document.getElementById('mainContent').style.display === 'none') {
             return;
         }
+
+        initLocationInputEvents();
+        updateAddressResultInfo();
 
         const today = new Date().toISOString().split('T')[0];
 
@@ -1287,9 +1894,7 @@
             document.getElementById('callTime').value ||
             '-';
 
-        const locationText =
-            document.getElementById('locationInput').value.trim() ||
-            '-';
+        const locationShareData = getShareLocationData();
 
         const memo =
             document.getElementById('memoInput').value.trim();
@@ -1299,7 +1904,8 @@
         textOutput += `📌 프로젝트: ${projectName}\n`;
         textOutput += `📅 촬영 날짜: ${shootDate}\n`;
         textOutput += `⏰ 콜타임: ${callTime}\n`;
-        textOutput += `📍 촬영 장소: ${locationText}\n`;
+        textOutput += `📍 촬영 장소: ${locationShareData.locationText}\n`;
+        textOutput += `🗺 카카오맵: ${locationShareData.mapUrl}\n`;
         textOutput += `-------------------------\n`;
         textOutput += `📦 장비 목록:\n`;
 
