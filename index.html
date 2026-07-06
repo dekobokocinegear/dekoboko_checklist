@@ -360,8 +360,7 @@
             left: 0;
             right: 0;
             z-index: 60;
-            overflow-y: auto;
-            max-height: 200px;
+            overflow: hidden;
             border: 1px solid #d8dee4;
             border-radius: 8px;
             background: #ffffff;
@@ -509,6 +508,10 @@
             opacity: 0.9;
         }
 
+        /* ---------------------------------------------------- */
+        /* 모바일 수량 휠 선택 UI */
+        /* ---------------------------------------------------- */
+
         .qty-picker-backdrop {
             position: fixed;
             inset: 0;
@@ -643,6 +646,10 @@
         body.qty-picker-open {
             touch-action: none;
         }
+
+        /* ---------------------------------------------------- */
+        /* 모바일 장비 구분 휠 선택 UI */
+        /* ---------------------------------------------------- */
 
         .shop-picker-backdrop {
             position: fixed;
@@ -780,6 +787,10 @@
         body.shop-picker-open {
             touch-action: none;
         }
+
+        /* ---------------------------------------------------- */
+        /* 대한민국 주소 검색 레이어 */
+        /* ---------------------------------------------------- */
 
         .address-search-backdrop {
             position: fixed;
@@ -1218,6 +1229,7 @@
     </div>
 </div>
 
+<!-- Daum/Kakao 우편번호 주소 검색을 정적 HTML에서 레이어 방식으로 사용합니다. -->
 <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 
 <script>
@@ -1267,30 +1279,9 @@
     let itemCount = 0;
     let shopList = [];
 
-    // [업그레이드] 전문 고가 시네 카메라, 렌즈군, 소모품 데이터 정밀 수혈 반영
     const DEFAULT_EQUIPMENT_SUGGESTIONS = [
-        '알렉사 미니',
-        '알렉사 미니 LF',
-        'ALEXA MINI',
-        'ALEXA MINI LF',
-        'SONY FX3',
-        'SONY FX6',
-        'SONY FX9',
-        'SONY BURANO',
-        '소니 부라노',
-        'RED KOMODO',
-        '레드 코모도',
-        'RED GEMINI',
-        '레드 제미니',
-        '레드 랩터',
-        'RED V-RAPTOR',
-        'RED V-RAPTOR-X',
         'BNC 숏 라인',
         'BNC 롱 라인',
-        'SDI 숏 라인',
-        'SDI 롱 라인',
-        'HDMI 숏 라인',
-        'HDMI 롱 라인',
         '2pin D-tap라인',
         'mini XLR D-tap 라인',
         '7pin lemo D-tap라인',
@@ -1300,31 +1291,13 @@
         '매직암 중',
         '매직암 소',
         '매직암 나노',
-        '노가암 대',
-        '노가암 중',
-        '노가암 소',
         '나노 클램프',
         '슈퍼클램프',
         '매슬리니',
         'C스탠드',
         'A스탠드',
-        '콤보 스탠드(2단)',
-        '콤보 스탠드(3단)',
         '암',
-        '헤드',
-        'GM 16-35',
-        'GM 16-35 mk2',
-        'GM 24-70',
-        'GM 24-70 mk2',
-        'GM 70-200',
-        'GM 70-200 mk2',
-        'V마운트 배터리',
-        'ND 필터 세트',
-        'ND 0.3',
-        'ND 0.6',
-        'ND 0.9',
-        'ND 1.2',
-        'ND 1.5'
+        '헤드'
     ];
 
     let selectedAddressData = {
@@ -1359,7 +1332,7 @@
                 "'": '&#039;'
             }[match];
         });
-    });
+    }
 
     function normalizeQty(qty) {
         const parsed = parseInt(qty, 10);
@@ -1641,7 +1614,7 @@
             .filter(function(item) {
                 return normalizeSuggestionValue(item).includes(normalizedQuery);
             })
-            .slice(0, 10); // 최대 노출을 10개로 상향 최적화
+            .slice(0, 8);
     }
 
     function closeEquipmentSuggestions() {
@@ -1770,6 +1743,10 @@
             encodeURIComponent(cleanAddress);
     }
 
+    function buildKakaoMapSearchUrl(address) {
+        return buildKakaoMapUrl(address);
+    }
+
     function setHiddenInputValue(id, value) {
         const input = document.getElementById(id);
 
@@ -1778,6 +1755,7 @@
         }
     }
 
+    // 선택된 주소 데이터를 hidden input과 JS 변수에 동시에 저장합니다.
     function syncSelectedAddressHiddenInputs() {
         selectedMapUrl = selectedAddressData.mapUrl || '';
 
@@ -1836,7 +1814,7 @@
 
         info.textContent =
             '주소 검색 버튼을 누르면 대한민국 주소를 검색할 수 있습니다.';
-            info.classList.remove('has-address');
+        info.classList.remove('has-address');
     }
 
     function setSelectedAddressData(data) {
@@ -1870,6 +1848,7 @@
         });
     }
 
+    // Daum Postcode 선택 결과를 앱의 주소 입력값과 저장 데이터로 반영합니다.
     function handleAddressSearchComplete(data) {
         const locationInput = document.getElementById('locationInput');
         const detailInput = document.getElementById('locationDetailInput');
@@ -1923,6 +1902,7 @@
         }
     }
 
+    // Daum Postcode 검색 결과를 모바일 바텀시트 안에 렌더링합니다.
     function openAddressSearchLayer() {
         const backdrop = document.getElementById('addressSearchBackdrop');
         const sheet = document.getElementById('addressSearchSheet');
@@ -1951,28 +1931,32 @@
         const postcode = new daum.Postcode({
             width: '100%',
             height: '100%',
-            overflow: hidden,
-            border: 1px solid #e9ecef;,
-            border-radius: 10px;,
-            background: #ffffff;
+            oncomplete: handleAddressSearchComplete
         });
 
-        postcode.embed(embedTarget);
+        const searchKeyword = getInputValue('locationInput');
+
+        if (searchKeyword) {
+            postcode.embed(embedTarget, { q: searchKeyword });
+        } else {
+            postcode.embed(embedTarget);
+        }
     }
 
     function closeAddressSearchLayer() {
         const backdrop = document.getElementById('addressSearchBackdrop');
         const sheet = document.getElementById('addressSearchSheet');
+        const embedTarget = document.getElementById('postcodeEmbed');
 
         if (backdrop) backdrop.classList.remove('active');
         if (sheet) sheet.classList.remove('active');
+        if (embedTarget) embedTarget.innerHTML = '';
 
         document.body.classList.remove('address-layer-open');
 
-        if (wrapper && addressLayerScrollTop > 0) {
+        if (wrapper) {
             wrapper.scrollTop = addressLayerScrollTop;
         }
-        addressLayerScrollTop = 0;
     }
 
     function initLocationInputEvents() {
@@ -2011,6 +1995,7 @@
         locationInputEventsReady = true;
     }
 
+    // 카톡 공유에 사용할 장소 텍스트와 카카오맵 URL을 만듭니다.
     function getShareLocationData() {
         const typedAddress = getInputValue('locationInput');
         const detailAddress = getInputValue('locationDetailInput');
